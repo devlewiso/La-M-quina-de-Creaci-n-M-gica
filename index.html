@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>La Máquina de Creación Mágica</title>
+
+    <!-- INICIO: Mejoras de SEO para todo el habla hispana (NUEVO) -->
+    <meta name="description" content="¡Juego educativo e interactivo para niños! Combina ingredientes mágicos para crear objetos en 17 categorías de aprendizaje: ciencia, espacio, arte, matemáticas, historia, tecnología y más. Ideal para el aprendizaje en español."/>
+    <meta name="keywords" content="juego para niños, juego educativo, aprendizaje español, ciencia, arte, matemáticas, juego interactivo, máquina mágica, categorías, creación, infantil, habla hispana, didáctico"/>
+    <meta name="author" content="Gemini AI"/>
+
+    <!-- Open Graph Tags para Redes Sociales (Facebook, WhatsApp, etc.) -->
+    <meta property="og:title" content="✨ La Máquina de Creación Mágica: Juego Educativo V1.0"/>
+    <meta property="og:description" content="¡Juego interactivo para niños en español! Combina 3 ingredientes mágicos para explorar 17 categorías como ciencia, historia y fantasía."/>
+    <meta property="og:type" content="game"/>
+    <meta property="og:locale" content="es_ES"/>
+    <!-- FIN: Mejoras de SEO -->
+
+    <!-- Incluir Tone.js para la generación de audio -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <style>
+        /* Estilos generales para hacerlo divertido y amigable */
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            background: linear-gradient(135deg, #f0f9ff 0%, #c9e6ff 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .game-container {
+            background-color: #ffffff;
+            border: 10px solid #a6d4fa;
+            border-radius: 30px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+            padding: 40px 30px;
+            text-align: center;
+            max-width: 90%;
+            width: 600px;
+            transition: all 0.5s ease-in-out;
+        }
+
+        h1 {
+            color: #4a90e2;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        /* Controles de Audio */
+        .audio-controls {
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .audio-controls label {
+            font-weight: bold;
+            color: #6a1b9a;
+            font-size: 0.9em;
+        }
+        
+        /* Estilo para el botón de Play/Pause */
+        #music-toggle-button {
+            padding: 8px 15px;
+            font-size: 1em;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            background-color: #FF9800;
+            color: white;
+            box-shadow: 0 3px 0 #E65100;
+            transition: all 0.2s;
+        }
+        
+        #music-toggle-button:active {
+            transform: translateY(3px);
+            box-shadow: none;
+        }
+
+
+        /* Nuevo estilo para el progreso */
+        .progress-bar {
+            color: #4CAF50;
+            font-size: 1.1em;
+            font-weight: bold;
+            margin-bottom: 10px;
+            min-height: 20px;
+        }
+
+        p.instruction {
+            color: #7f8c8d;
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            min-height: 30px;
+        }
+
+        /* Área de visualización del objetivo y resultado */
+        .creation-display {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+            margin-bottom: 30px;
+            background: linear-gradient(45deg, #f7f7f7, #ffffff);
+            border: 5px solid #81c784;
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+            transition: background-color 0.5s;
+        }
+        
+        .creation-display h2 {
+            color: #4a90e2;
+            font-size: 1.5em;
+            margin: 0;
+        }
+
+        /* Estilo para el elemento visual (emoji) */
+        .visual-element {
+            font-size: 6em;
+            transition: transform 0.8s ease, opacity 0.8s ease;
+            margin-top: 10px;
+        }
+
+        /* Indicador de ingredientes */
+        .ingredient-indicators {
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .indicator {
+            font-size: 2em;
+            opacity: 0.3;
+            transition: opacity 0.3s;
+        }
+
+        .indicator.collected {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        /* Contenedor de botones */
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        /* Estilo base del botón */
+        .action-button {
+            padding: 12px 20px;
+            font-size: 1em;
+            font-weight: bold;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.1s, box-shadow 0.3s;
+            box-shadow: 0 4px 0 rgba(0, 0, 0, 0.2);
+            min-width: 100px;
+            background-color: #6a1b9a; /* Color por defecto, será sobrescrito */
+        }
+
+        .action-button:active {
+            transform: translateY(4px);
+            box-shadow: 0 0 0 rgba(0, 0, 0, 0.2);
+        }
+
+        .action-button:disabled {
+            background-color: #ccc !important;
+            box-shadow: none;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Mensajes */
+        #message-box {
+            margin-top: 20px;
+            font-weight: bold;
+            min-height: 20px;
+            color: #4CAF50;
+            font-size: 1.1em;
+        }
+
+        /* Estilos de éxito */
+        .success-animation {
+            animation: bounce 0.5s infinite alternate;
+        }
+
+        @keyframes bounce {
+            from { transform: translateY(0) scale(1.1); }
+            to { transform: translateY(-10px) scale(1.2); }
+        }
+
+        /* Media queries para móvil */
+        @media (max-width: 600px) {
+            .game-container {
+                padding: 15px;
+            }
+            h1 {
+                font-size: 1.5em;
+            }
+            .progress-bar {
+                font-size: 1em;
+            }
+            p.instruction {
+                font-size: 0.9em;
+            }
+            .creation-display {
+                height: 150px;
+            }
+            .visual-element {
+                font-size: 5em;
+            }
+            .ingredient-indicators {
+                gap: 10px;
+                margin-bottom: 20px;
+            }
+            .indicator {
+                font-size: 1.5em;
+            }
+            .action-button {
+                padding: 10px 15px;
+                font-size: 0.9em;
+                min-width: 80px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-container">
+        <!-- Título actualizado con la versión -->
+        <h1>✨ La Máquina de Creación Mágica 🪄 <span style="font-size: 0.5em; vertical-align: top; color: #6a1b9a;">(Versión 1.0)</span></h1>
+        
+        <!-- Controles de volumen y música -->
+        <div class="audio-controls">
+            <button id="music-toggle-button">▶️ Iniciar Música</button>
+            <label for="volume-slider">Volumen:</label>
+            <input type="range" id="volume-slider" min="-30" max="0" value="-10" step="1">
+        </div>
+
+        <div class="progress-bar" id="progress-indicator">Desafío 1 de 17</div>
+        
+        <p class="instruction" id="instruction-text">
+            ¡Usa los ingredientes correctos para completar el desafío!
+        </p>
+
+        <div class="creation-display">
+            <h2 id="goal-text"></h2>
+            <div id="visual-output" class="visual-element"></div>
+        </div>
+        
+        <div class="ingredient-indicators" id="ingredient-indicators">
+            <!-- Indicadores de ingredientes requeridos -->
+        </div>
+
+        <div class="controls" id="game-controls">
+            <!-- Los botones se añadirán y actualizarán con JavaScript -->
+        </div>
+
+        <div id="message-box"></div>
+    </div>
+
+    <script type="module">
+        // Referencias a elementos del DOM
+        const visualOutput = document.getElementById('visual-output');
+        const instructionText = document.getElementById('instruction-text');
+        const goalText = document.getElementById('goal-text');
+        const gameControls = document.getElementById('game-controls');
+        const indicatorContainer = document.getElementById('ingredient-indicators');
+        const messageBox = document.getElementById('message-box');
+        const progressIndicator = document.getElementById('progress-indicator');
+        
+        // Elementos de audio
+        const volumeSlider = document.getElementById('volume-slider');
+        const musicToggleButton = document.getElementById('music-toggle-button');
+
+        // --- Configuración de los Desafíos ---
+        const CHALLENGES = [
+            {
+                category: "Naturaleza (Ciencias Naturales)",
+                goal: "Flor Mágica 🌸",
+                emoji: "🌺",
+                ingredients: [
+                    { name: "Agua", emoji: "💧", color: "#2196F3" },
+                    { name: "Sol", emoji: "☀️", color: "#FFC107" },
+                    { name: "Amor", emoji: "🎶", color: "#9C27B0" }
+                ],
+                success: "¡La semilla creció! ¡Tienes una flor mágica!"
+            },
+            {
+                category: "El Espacio (Astronomía)",
+                goal: "Planeta 🪐",
+                emoji: "🌍",
+                ingredients: [
+                    { name: "Nebulosa", emoji: "🌌", color: "#673AB7" },
+                    { name: "Gravedad", emoji: "🧲", color: "#00BCD4" },
+                    { name: "Polvo Estelar", emoji: "✨", color: "#FFEB3B" }
+                ],
+                success: "¡Creaste un nuevo mundo! ¡Es un planeta de juguete!"
+            },
+            {
+                category: "Animales (Biología)",
+                goal: "León 🦁",
+                emoji: "👑",
+                ingredients: [
+                    { name: "Fuerza", emoji: "💪", color: "#F44336" },
+                    { name: "Pelo", emoji: "🪶", color: "#FF9800" },
+                    { name: "Rugido", emoji: "📣", color: "#795548" }
+                ],
+                success: "¡Guau! El rey de la selva ha aparecido."
+            },
+            {
+                category: "Vehículos (Ingeniería)",
+                goal: "Cohete 🚀",
+                emoji: "🛰️",
+                ingredients: [
+                    { name: "Metal", emoji: "🔩", color: "#9E9E9E" },
+                    { name: "Combustible", emoji: "🔥", color: "#FF5722" },
+                    { name: "Piloto", emoji: "🧑‍🚀", color: "#607D8B" }
+                ],
+                success: "¡Despegue exitoso! ¡A volar por el espacio!"
+            },
+            {
+                category: "Comida (Cocina)",
+                goal: "Pastel 🍰",
+                emoji: "🎂",
+                ingredients: [
+                    { name: "Huevos", emoji: "🥚", color: "#E91E63" },
+                    { name: "Azúcar", emoji: "🍚", color: "#FFC107" },
+                    { name: "Horno", emoji: "♨️", color: "#795548" }
+                ],
+                success: "¡Qué delicioso! El pastel está listo para celebrar."
+            },
+            {
+                category: "Música (Arte)",
+                goal: "Canción 🎵",
+                emoji: "🎧",
+                ingredients: [
+                    { name: "Voz", emoji: "🎤", color: "#009688" },
+                    { name: "Instrumento", emoji: "🎸", color: "#673AB7" },
+                    { name: "Ritmo", emoji: "🥁", color: "#CDDC39" }
+                ],
+                success: "¡Qué ritmo! ¡Una canción mágica que te hace bailar!"
+            },
+            {
+                category: "Clima (Meteorología)",
+                goal: "Arcoíris 🌈",
+                emoji: "🌦️",
+                ingredients: [
+                    { name: "Lluvia", emoji: "🌧️", color: "#03A9F4" },
+                    { name: "Sol", emoji: "☀️", color: "#FFC107" },
+                    { name: "Cristales", emoji: "💎", color: "#E040FB" }
+                ],
+                success: "¡Qué belleza! Apareció un arcoíris mágico de colores."
+            },
+            {
+                category: "Cuerpo Humano (Salud)",
+                goal: "Músculo 💪",
+                emoji: "🏃",
+                ingredients: [
+                    { name: "Comida Sana", emoji: "🍎", color: "#4CAF50" },
+                    { name: "Ejercicio", emoji: "🤸", color: "#3F51B5" },
+                    { name: "Descanso", emoji: "💤", color: "#9E9E9E" }
+                ],
+                success: "¡Súper fuerte! Creaste un músculo de campeón."
+            },
+            {
+                category: "Arte (Dibujo)",
+                goal: "Cuadro 🖼️",
+                emoji: "🎨",
+                ingredients: [
+                    { name: "Pintura", emoji: "🖌️", color: "#FF9800" },
+                    { name: "Lienzo", emoji: "⬜", color: "#EAEAEA" },
+                    { name: "Idea", emoji: "💡", color: "#FFEB3B" }
+                ],
+                success: "¡Una obra maestra! Creaste un cuadro muy divertido."
+            },
+            {
+                category: "Matemáticas (Geometría)",
+                goal: "Cubo 🧊",
+                emoji: "📐",
+                ingredients: [
+                    { name: "Líneas Rectas", emoji: "➖", color: "#333333" },
+                    { name: "Ángulos", emoji: "⊾", color: "#795548" },
+                    { name: "Lógica", emoji: "🧠", color: "#00BCD4" }
+                ],
+                success: "¡Qué orden! Un cubo perfecto de tres dimensiones."
+            },
+            {
+                category: "Sentimientos (Emociones)",
+                goal: "Risa 😄",
+                emoji: "🥳",
+                ingredients: [
+                    { name: "Amigos", emoji: "🧑‍🤝‍🧑", color: "#FF4081" },
+                    { name: "Bromas", emoji: "🤣", color: "#FFAB00" },
+                    { name: "Abrazos", emoji: "🤗", color: "#8BC34A" }
+                ],
+                success: "¡JAJAJA! ¡El sentimiento más divertido de todos!"
+            },
+            {
+                category: "Historia (Prehistoria)",
+                goal: "Dinosaurio 🦖",
+                emoji: "🦴",
+                ingredients: [
+                    { name: "Huesos", emoji: "💀", color: "#795548" },
+                    { name: "Tierra Antigua", emoji: "🌋", color: "#FF5722" },
+                    { name: "Mucho Tiempo", emoji: "⏳", color: "#FFEB3B" }
+                ],
+                success: "¡Roar! Un enorme y amigable dinosaurio de juguete."
+            },
+            {
+                category: "Tecnología (Invención)",
+                goal: "Robot 🤖",
+                emoji: "⚙️",
+                ingredients: [
+                    { name: "Chips", emoji: "🧠", color: "#9E9E9E" },
+                    { name: "Cables", emoji: "🔌", color: "#FF4081" },
+                    { name: "Electricidad", emoji: "⚡", color: "#FFEB3B" }
+                ],
+                success: "¡BEEP BOOP! Tienes un robot que te ayuda a ordenar."
+            },
+            {
+                category: "Geografía (Paisajes)",
+                goal: "Volcán 🌋",
+                emoji: "⛰️",
+                ingredients: [
+                    { name: "Piedras", emoji: "🪨", color: "#607D8B" },
+                    { name: "Magma", emoji: "🟠", color: "#E65100" },
+                    { name: "Presión", emoji: "💨", color: "#B3E5FC" }
+                ],
+                success: "¡Qué vista! Un majestuoso volcán, ¡pero no hace erupción!"
+            },
+            {
+                category: "Fantasía (Magia)",
+                goal: "Varita Mágica 🪄",
+                emoji: "🌟",
+                ingredients: [
+                    { name: "Polvo de Hada", emoji: "✨", color: "#FFCCBC" },
+                    { name: "Madera", emoji: "🪵", color: "#795548" },
+                    { name: "Un Deseo", emoji: "💭", color: "#4A148C" }
+                ],
+                success: "¡Abracadabra! Una varita lista para cumplir un deseo."
+            },
+            {
+                category: "Idiomas (Comunicación)",
+                goal: "Palabra Nueva 🗣️",
+                emoji: "📖",
+                ingredients: [
+                    { name: "Boca", emoji: "👄", color: "#E91E63" },
+                    { name: "Oído", emoji: "👂", color: "#9E9E9E" },
+                    { name: "Significado", emoji: "❓", color: "#00BCD4" }
+                ],
+                success: "¡Qué divertido! Aprendiste una palabra nueva."
+            },
+            {
+                category: "Cuentos (Personajes)",
+                goal: "Princesa/Héroe 👸",
+                emoji: "🏰",
+                ingredients: [
+                    { name: "Valor", emoji: "🛡️", color: "#3F51B5" },
+                    { name: "Vestido/Capa", emoji: "👗", color: "#FF9800" },
+                    { name: "Castillo", emoji: "👑", color: "#BCAAA4" }
+                ],
+                success: "¡Un final feliz! El héroe/princesa está listo para su aventura."
+            }
+        ];
+        
+        const TOTAL_CHALLENGES = CHALLENGES.length; // 17 ahora
+
+        // Estado actual del juego
+        let currentChallengeIndex = 0;
+        let collectedIngredients = [];
+        
+        // --- LÓGICA DE AUDIO ---
+        let synth, loop, musicStarted = false;
+        
+        // Función para inicializar y empezar la música
+        async function startMusic() {
+            // Tone.js requiere que se inicie el contexto de audio después de una interacción del usuario
+            await Tone.start();
+            
+            // Si la música ya se inició, solo reanudar
+            if (musicStarted) {
+                Tone.getTransport().start();
+                musicToggleButton.textContent = "⏸️ Pausar Música";
+                return;
+            }
+
+            // Inicializar el sintetizador (para un sonido alegre)
+            synth = new Tone.PolySynth(Tone.Synth, {
+                oscillator: { type: "triangle" },
+                envelope: {
+                    attack: 0.05,
+                    decay: 0.1,
+                    sustain: 0.3,
+                    release: 1
+                }
+            }).toDestination();
+            
+            // Aplicar el volumen inicial del slider
+            synth.volume.value = volumeSlider.value; 
+
+            // Melodía simple y alegre (escala mayor)
+            const notes = ["C4", "E4", "G4", "A4", "G4", "E4", "C4", "G3"];
+            let noteIndex = 0;
+
+            // Crear el loop de repetición
+            loop = new Tone.Loop(time => {
+                const note = notes[noteIndex % notes.length];
+                synth.triggerAttackRelease(note, "8n", time);
+                noteIndex++;
+            }, "4n").start(0);
+
+            // Iniciar el transporte (el "reloj" de la música)
+            Tone.getTransport().bpm.value = 120; // Ritmo
+            Tone.getTransport().start();
+
+            musicStarted = true;
+            musicToggleButton.textContent = "⏸️ Pausar Música";
+        }
+        
+        // Función para pausar la música
+        function stopMusic() {
+            if (musicStarted) {
+                Tone.getTransport().pause();
+                musicToggleButton.textContent = "▶️ Reanudar Música";
+            }
+        }
+
+        // Event listener para el botón de Play/Pause
+        musicToggleButton.addEventListener('click', () => {
+            if (!musicStarted || Tone.getTransport().state === 'stopped' || Tone.getTransport().state === 'paused') {
+                startMusic();
+            } else {
+                stopMusic();
+            }
+        });
+        
+        // Event listener para el control de volumen
+        volumeSlider.addEventListener('input', (event) => {
+            // El valor del slider es en decibelios (dB), Tone.js lo usa directamente
+            if (synth) {
+                synth.volume.value = event.target.value;
+            }
+        });
+
+        // --- LÓGICA DEL JUEGO ---
+
+        /**
+         * Maneja el clic en un botón de ingrediente.
+         * @param {string} ingredientName - El nombre del ingrediente clickeado.
+         */
+        function handleActionClick(ingredientName) {
+            messageBox.textContent = '';
+            
+            // Verificar si el ingrediente ya fue recolectado
+            if (collectedIngredients.includes(ingredientName)) {
+                // Mostrar un mensaje más amigable para niños
+                messageBox.textContent = `¡Ya tienes ${ingredientName}! Necesitas otro ingrediente mágico para esta creación.`;
+                messageBox.style.color = '#FFA000'; // Naranja
+                return;
+            }
+
+            // Agregar el nuevo ingrediente
+            collectedIngredients.push(ingredientName);
+
+            // 1. Actualizar visuales (indicadores y mensaje)
+            updateIngredientIndicators();
+            messageBox.textContent = `¡Añadiste ${ingredientName}! ¡Sigue así!`;
+            messageBox.style.color = '#4CAF50'; // Verde
+
+            // 2. Comprobar si se completó el desafío
+            const currentChallenge = CHALLENGES[currentChallengeIndex];
+            if (collectedIngredients.length === currentChallenge.ingredients.length) {
+                // Desafío completado, mostrar el éxito y preparar el botón Siguiente
+                showSuccess(currentChallenge);
+                visualOutput.classList.add('success-animation');
+            }
+        }
+
+        /**
+         * Muestra el resultado de éxito y prepara el botón para avanzar.
+         */
+        function showSuccess(challenge) {
+            visualOutput.textContent = challenge.emoji;
+            messageBox.textContent = challenge.success;
+            messageBox.style.color = '#4A148C'; // Morado
+            instructionText.textContent = `¡Completaste la categoría: ${challenge.category}!`;
+
+            // Ocultar botones de ingredientes y mostrar botón Siguiente
+            gameControls.innerHTML = ''; 
+
+            const nextButton = document.createElement('button');
+            
+            // Verificar si es el último desafío
+            const isLastChallenge = currentChallengeIndex === TOTAL_CHALLENGES - 1;
+
+            nextButton.textContent = isLastChallenge
+                                     ? "¡Volver a Empezar! 🚀" 
+                                     : "¡Siguiente Desafío! 👉";
+            nextButton.className = 'action-button';
+            nextButton.style.backgroundColor = isLastChallenge ? '#f44336' : '#00C853';
+            nextButton.addEventListener('click', handleNextChallenge);
+            gameControls.appendChild(nextButton);
+        }
+
+        /**
+         * Maneja el avance al siguiente desafío o reinicio.
+         */
+        function handleNextChallenge() {
+            visualOutput.classList.remove('success-animation');
+            collectedIngredients = []; // Resetear ingredientes
+
+            if (currentChallengeIndex < TOTAL_CHALLENGES - 1) {
+                currentChallengeIndex++; // Avanzar
+            } else {
+                currentChallengeIndex = 0; // Reiniciar
+            }
+
+            updateGameView();
+        }
+
+
+        /**
+         * Crea y actualiza los indicadores visuales de los ingredientes requeridos.
+         */
+        function updateIngredientIndicators() {
+            const currentChallenge = CHALLENGES[currentChallengeIndex];
+            indicatorContainer.innerHTML = '';
+
+            currentChallenge.ingredients.forEach(ing => {
+                const indicator = document.createElement('span');
+                indicator.textContent = ing.emoji;
+                indicator.className = 'indicator';
+                
+                // Si el ingrediente está recolectado, hacerlo visible
+                if (collectedIngredients.includes(ing.name)) {
+                    indicator.classList.add('collected');
+                }
+                indicatorContainer.appendChild(indicator);
+            });
+        }
+
+
+        /**
+         * Actualiza la interfaz del juego (visuales, texto y botones).
+         */
+        function updateGameView() {
+            const currentChallenge = CHALLENGES[currentChallengeIndex];
+            
+            // 0. Actualizar el indicador de progreso
+            progressIndicator.textContent = `Desafío ${currentChallengeIndex + 1} de ${TOTAL_CHALLENGES}`;
+
+            // 1. Mostrar información del desafío actual
+            goalText.textContent = `Desafío: ${currentChallenge.goal} (${currentChallenge.category})`;
+            instructionText.textContent = `¡Busca los 3 ingredientes para crear un(a) ${currentChallenge.goal.split(' ')[0]}!`;
+            visualOutput.textContent = currentChallenge.emoji;
+            visualOutput.style.transform = 'scale(1)';
+            messageBox.textContent = '';
+
+            // 2. Crear los botones de acción (ingredientes)
+            gameControls.innerHTML = '';
+            currentChallenge.ingredients.forEach(ing => {
+                const button = document.createElement('button');
+                button.textContent = `${ing.emoji} ${ing.name}`;
+                button.className = 'action-button';
+                button.style.backgroundColor = ing.color;
+                
+                // Deshabilitar si ya está recolectado
+                if (collectedIngredients.includes(ing.name)) {
+                    button.disabled = true;
+                } else {
+                    // Usar bind para pasar el nombre del ingrediente al hacer click
+                    button.addEventListener('click', () => handleActionClick(ing.name));
+                }
+                gameControls.appendChild(button);
+            });
+
+            // 3. Actualizar los indicadores
+            updateIngredientIndicators();
+        }
+
+        // Inicializar el juego al cargar la ventana
+        window.onload = updateGameView;
+
+    </script>
+</body>
+</html>
